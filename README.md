@@ -1,4 +1,33 @@
-# Try Out Development Containers: PHP
+# Codespace Docker Development Container for PHP with MySQL, PHP Extensions, Composer, and NodeJS
+
+## KAPNET Modifications
+To the .devcontainers Folder
+- Added docker-compose.yml
+- Added Dockerfile
+
+To the devcontainer.json file
+- Commented out image
+- This file installs MySQL from features section
+- Uses docker-compose.yml which then uses Dockerfile
+- Dockerfile installs PHP extensions missing from other builds
+- Dockerfile also installs Composer and NodeJS
+
+Usage
+```PHP
+php -S 0.0.0.0:8000
+php --ini
+
+mysql.server start
+mysql.server stop
+
+Mysql -u root
+CREATE database easyappt;
+CREATE USER 'sammy'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON *.* TO 'hotelmah'@'localhost' WITH GRANT OPTION;
+```
+>NOTE: Launch MySQL Workbench and connect to server to modify database.
+
+## From Microsoft
 
 [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-php)
 
@@ -63,8 +92,8 @@ Some things to try:
    - From the terminal, run `php -S 0.0.0.0:8000`
    - Click "Open in Browser" in the notification that appears to access the web app on this new port.
       - You can view an organized table of your forwarded ports in the 'Ports' view, which can be accessed with the command **Ports: Focus on Ports View**.
-      - Notice port 8000 in the 'Ports' view is labeled "Hello Remote World." In `devcontainer.json`, you can set `"portsAttributes"`, such as a label for your forwarded ports and the action to be taken when the port is autoforwarded.
-   - Look back at the terminal, and you should see the output from your site navigations.
+      - Notice port 8000 in the 'Ports' view is labeled "Hello Remote World." In `devcontainer.json`, you can set `"portsAttributes"`, such as a label for your forwarded ports and the action to be taken when the port is auto-forwarded.
+   - Look back at the terminal, and you should see the output from your site navigation.
    - Edit the text on line 21 in `index.php` and refresh the page to see the changes immediately take effect.
 
 1. **Attach debugger to the server:**
@@ -79,7 +108,7 @@ Some things to try:
 5. **Install Node.js using a Dev Container Feature:**
    - Press <kbd>F1</kbd> and select the **Dev Containers: Configure Container Features...** or **Codespaces: Configure Container Features...** command.
    - Type "node" in the text box at the top.
-   - Check the check box next to "Node.js (via nvm) and yarn" (published by devcontainers) 
+   - Check the check box next to "Node.js (via nvm) and yarn" (published by devcontainers)
    - Click OK
    - Press <kbd>F1</kbd> and select the **Dev Containers: Rebuild Container** or **Codespaces: Rebuild Container** command so the modifications are picked up.
 

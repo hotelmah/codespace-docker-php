@@ -1,0 +1,355 @@
+<?php
+
+declare(strict_types=1);
+
+namespace KAPNET;
+
+date_default_timezone_set("America/Chicago");
+
+require_once('config.server.constants.php');
+
+class ClsDataBaseMySQLiKapnetBase
+{
+    protected object $KAPNETMySQLi;
+    protected object $KAPNETMySQLiResultSet;
+    protected bool $KAPNETMySQLiRealConnectResult;
+
+    /* ===================================================================================================================== */
+    public function __construct()
+    {
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+        $this->KAPNETMySQLi = mysqli_init();
+        $this->KAPNETMySQLi->options(MYSQLI_INIT_COMMAND, "SET AUTOCOMMIT=1");
+        $this->KAPNETMySQLi->options(MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+        $this->KAPNETMySQLi->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+        $this->KAPNETMySQLiRealConnectResult = $this->KAPNETMySQLi->real_connect(OLDKAPNETSERVER, OLDKAPNETDBUSERNAME, OLDKAPNETDBPASSWORD, OLDKAPNETDBNAME, 3306);
+
+        // Turns on or off auto-commit mode on queries for the database connection.
+        $this->KAPNETMySQLi->autocommit(true);
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ==== Properties: Connection Errors ================================================================================== */
+    public function connectionCheckIfGood(): bool
+    {
+        if (($this->KAPNETMySQLiRealConnectResult == true) && ($this->KAPNETMySQLi->connect_errno == 0) && is_null($this->KAPNETMySQLi->connect_error)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function connectionGetErrorNumber(): int
+    {
+        // Returns the error code from last connect call
+        // Zero means no error occurred.
+
+        return $this->KAPNETMySQLi->connect_errno;
+    }
+
+    public function connectionGetErrorMessage(): string
+    {
+        // Returns a description of the last connection error
+        // null is returned if no error occurred.
+
+        if (is_null($this->KAPNETMySQLi->connect_error)) {
+            return "N/A";
+        } else {
+            return $this->KAPNETMySQLi->connect_error;
+        }
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ======= Properties: Query Info/Errors =============================================================================== */
+    public function queryCheckIfGood(bool $ResultSetExpected): bool
+    {
+        $TempReturnResult = false;
+
+        if (($this->KAPNETMySQLi->errno == 0) && (empty($this->KAPNETMySQLi->error)) && ($this->queryGetErrorListCount() == 0) && ($this->KAPNETMySQLi->warning_count == 0)) {
+            if (($ResultSetExpected) && ($this->KAPNETMySQLi->field_count > 0)) {
+                $TempReturnResult = true;
+            } elseif ((!$ResultSetExpected) && ($this->KAPNETMySQLi->field_count == 0)) {
+                $TempReturnResult = true;
+            }
+        }
+
+        return $TempReturnResult;
+    }
+
+    public function queryInfo(): string
+    {
+        // Retrieves information about the most recently executed query
+        // For Insert, Update, Alter, Load Data SQL Statements
+        // Queries which do not fall into one of the preceding formats are not supported.
+        // In these situations, mysqli_info() will return an empty string
+
+        if (empty($this->KAPNETMySQLi->info)) {
+            return "N/A";
+        } else {
+            return $this->KAPNETMySQLi->info;
+        }
+    }
+
+    public function queryGetErrorNumber(): int
+    {
+        // Returns the error code for the most recent function call that can succeed or fail.
+        // zero means no error occurred.
+
+        return $this->KAPNETMySQLi->errno;
+    }
+
+    public function queryGetErrorMessage(): string
+    {
+        // Returns a string description of the last error
+        // An empty string if no error occurred
+
+        if (empty($this->KAPNETMySQLi->error)) {
+            return "N/A";
+        } else {
+            return $this->KAPNETMySQLi->error;
+        }
+    }
+
+    public function queryGetErrorListCount(): int
+    {
+        return count($this->KAPNETMySQLi->error_list);
+    }
+
+    public function queryGetErrorListMessages(): string
+    {
+        $TempString = "";
+
+        // Returns a list of errors from the last command executed
+        // A list of errors, each as an associative array containing the errno, error, and sqlstate.
+
+        foreach ($this->KAPNETMySQLi->error_list as $ErrorItem) {
+            $TempString .= $ErrorItem . ", \r\n";
+        }
+
+        return $TempString;
+    }
+
+    public function queryGetInsUpdAutoGenID(): int
+    {
+        // Returns the value generated for an AUTO_INCREMENT column by the last query
+        // Returns the ID generated by an INSERT or UPDATE query on a table with a column having the AUTO_INCREMENT attribute
+        // Returns 0 if the previous statement did not change an AUTO_INCREMENT value
+        // mysqli_insert_id() must be called immediately after the statement that generated the value.
+        // Returns zero if there was no previous query on the connection or if the query did not update an AUTO_INCREMENT value.
+
+        return $this->KAPNETMySQLi->insert_id;
+    }
+
+    public function queryGetAffectedRows(): int
+    {
+        // Returns the number of rows affected by the last INSERT, UPDATE, REPLACE or DELETE query.
+        // Works like mysqli_num_rows() for SELECT statements.
+        // Zero indicates that no records were updated for an UPDATE statement,
+        // no rows matched the WHERE clause in the query or that no query has yet been executed.
+        // -1 indicates that the query returned an error or that mysqli_affected_rows()
+        // was called for an unbuffered SELECT query
+
+        return $this->KAPNETMySQLi->affected_rows;
+    }
+
+    public function queryGetWarningCount(): int
+    {
+        // Returns the number of warnings from the last query for the given link
+        // zero if there are no warnings.
+
+        return $this->KAPNETMySQLi->warning_count;
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ===== Properties: Connection/Server ================================================================================= */
+    public function getCharacterSetName(): string
+    {
+        // Returns the current character set of the database connection
+
+        return $this->KAPNETMySQLi->character_set_name();
+    }
+
+    public function getClientVersion(): int
+    {
+        // Returns the MySQL client version as an integer
+
+        return $this->KAPNETMySQLi->client_version;
+    }
+
+    public function getHostInfo(): string
+    {
+        // Returns a string representing the type of connection used
+        // Returns a string describing the connection represented by the mysql parameter (including the server host name).
+        // A character string representing the server hostname and the connection type.
+
+        return $this->KAPNETMySQLi->host_info;
+    }
+
+    public function getProtocolVersion(): int
+    {
+        // Returns the version of the MySQL protocol used
+
+        return $this->KAPNETMySQLi->protocol_version;
+    }
+
+    public function getServerInfo(): string
+    {
+        // Returns the version of the MySQL server
+        // Returns a string representing the version of the MySQL server that theMySQLi extension is connected to.
+
+        return $this->KAPNETMySQLi->server_info;
+    }
+
+    public function getServerVersion(): int
+    {
+        // Returns the version of the MySQL server as an integer
+
+        return $this->KAPNETMySQLi->server_version;
+    }
+
+    public function getSystemStatus(): string
+    {
+        // Gets the current system status
+        // This includes uptime in seconds and the number of running threads,questions, reloads, and open tables.
+
+        return $this->KAPNETMySQLi->stat();
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ====== Result Set: Properties ======================================================================================= */
+    public function resultSetFetchNumFields(): int
+    {
+        // Gets the number of fields in the result set
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            return $this->KAPNETMySQLiResultSet->field_count;
+        } else {
+            return -1;
+        }
+    }
+
+    public function resultSetFetchNumRows(): int
+    {
+        //  Gets the number of rows in the result set
+        // The behaviour of mysqli_num_rows() depends on whether buffered or unbuffered result sets are being used.
+        // This function returns 0 for unbuffered result sets unless all rows have been fetched from the server.
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            return $this->KAPNETMySQLiResultSet->num_rows;
+        } else {
+            return -1;
+        }
+    }
+    /* ===================================================================================================================== */
+
+    /* ====== Result Set: Methods ========================================================================================== */
+    public function resultSetFetchAllRows(): array
+    {
+        $TempArray = array();
+
+        // Fetch all result rows as an associative array, a numeric array, or both
+        // Returns a two-dimensional array of all result rows as an associative array, a numeric array, or both.
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            return $this->KAPNETMySQLiResultSet->fetch_all(MYSQLI_ASSOC);
+        } else {
+            return $TempArray;
+        }
+    }
+
+    public function resultSetFetchNextRow(): ?array
+    {
+        $TempArray = array();
+
+        // UNLIKE: fetch_array, which fetches the next row of a result set as an associative, a numeric array, or both
+        // Fetch the next row of a result set as an associative array
+        // Fetches one row of data from the result set and returns it as an associative array
+        // Each subsequent call to this function will return the next row within the result set, or null if there are no more rows.
+        // If two or more columns of the result have the same name, the last column will take precedence and overwrite any previous data
+        // Note: Field names returned by this function are case-sensitive.
+        // Returns an associative array representing the fetched row,
+        // where each key in the array represents the name of one of the resultset's columns,
+        // null if there are no more rows in the result set, or false on failure.
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            return $this->KAPNETMySQLiResultSet->fetch_assoc();
+        } else {
+            return $TempArray;
+        }
+    }
+
+    public function resultSetFetchAllFields(): array
+    {
+        $TempArray = array();
+
+        // Returns an array of objects representing the fields in a result set
+        // This function serves an identical purpose to the mysqli_fetch_field() function
+        // with the single difference that, instead of returning one object at a time for each field,
+        // the columns are returned as an array of objects.
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            return $this->KAPNETMySQLiResultSet->fetch_fields();
+        } else {
+            return $TempArray;
+        }
+    }
+
+    public function resultSetClose(): void
+    {
+        // Frees the memory associated with the result.
+
+        if (isset($this->KAPNETMySQLiResultSet) && ($this->KAPNETMySQLiResultSet->num_rows > 0)) {
+            $this->KAPNETMySQLiResultSet->free_result();
+        }
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ===================================================================================================================== */
+    // This is legacy code and no longer used, 10-15-2024. Here for posterity
+    public function getPageContent(string $TempPage, string $TempType, string $TempLocation): string
+    {
+        $TempReturnResult = "Page Content Not Available";
+
+        if ($this->connectionCheckIfGood()) {
+            if ($this->KAPNETMySQLi->real_query("SELECT ContentID, Text FROM wwwkevinpnet.contents WHERE Page='" . $TempPage . "' AND Type='" . $TempType . "' AND Location='" . $TempLocation . "';")) {
+                if ($this->queryCheckIfGood(true)) {
+                    if ($this->KAPNETMySQLiResultSet = $this->KAPNETMySQLi->store_result()) {
+                        if ($this->KAPNETMySQLiResultSet->num_rows > 0) {
+                            $KAPNETResultSetRow = $this->KAPNETMySQLiResultSet->fetch_assoc();
+
+                            $TempReturnResult = $KAPNETResultSetRow["Text"];
+
+                            unset($KAPNETResultSetRow);
+                        }
+                        $this->KAPNETMySQLiResultSet->free_result();
+                        unset($this->KAPNETMySQLiResultSet);
+                    }
+                }
+            }
+        }
+        return $TempReturnResult;
+    }
+    /* ===================================================================================================================== */
+
+
+    /* ===================================================================================================================== */
+    public function __destruct()
+    {
+        // Open non-persistent MySQL connections and result sets are automatically closed when their objects are destroyed.
+        // Explicitly closing open connections and freeing result sets is optional.
+        // However, it's a good idea to close the connection as soon as the script finishes performing all of its database operations,
+        // if it still has a lot of processing to do after getting the results.
+        // will not close persistent connections
+
+        $this->KAPNETMySQLi->close();
+        unset($this->KAPNETMySQLiResultSet);
+        unset($this->KAPNETMySQLi);
+    }
+    /* ===================================================================================================================== */
+}
