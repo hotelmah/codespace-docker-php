@@ -1,12 +1,14 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/php
+// README at: https://github.com/devcontainers/templates/tree/main/src/php-mariadb
 {
     "name": "PHP and MySQL and Composer and NodeJS",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     // "image": "mcr.microsoft.com/devcontainers/php:1-8.3",
     "dockerComposeFile": "docker-compose.yml",
-	"service": "app",
+    "service": "app",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
 
@@ -24,6 +26,9 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [8000],
 
+    // For use with PHP or Apache (e.g.php -S localhost:8080 or apache2ctl start)
+    // "forwardPorts": [8080, 3306]
+	
     // Use 'portsAttributes' to set default properties for specific forwarded ports. More info: https://code.visualstudio.com/docs/remote/devcontainerjson-reference.
     "portsAttributes": {
         "8000": {
